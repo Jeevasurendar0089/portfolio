@@ -1,87 +1,164 @@
-/* Portfolio interactions: navigation, scroll state, copy action and footer year. */
-document.addEventListener("DOMContentLoaded", () => {
+/* Portfolio interactions: nav, scroll state, tabs, architecture diagrams, reveals, copy email. */
+(() => {
+  const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  /* ---------- Navigation ---------- */
   const header = document.getElementById("siteHeader");
   const menuToggle = document.getElementById("menuToggle");
   const navLinks = document.getElementById("navLinks");
   const links = navLinks ? [...navLinks.querySelectorAll('a[href^="#"]')] : [];
-  const sections = [...document.querySelectorAll("main section[id]")];
   const progress = document.getElementById("scrollProgress");
-  const year = document.getElementById("currentYear");
-  const copyEmail = document.getElementById("copyEmail");
 
-  const closeMenu = () => {
-    navLinks?.classList.remove("is-open");
-    menuToggle?.setAttribute("aria-expanded", "false");
-    menuToggle?.setAttribute("aria-label", "Open navigation menu");
-  };
-
-  menuToggle?.addEventListener("click", () => {
-    const open = !navLinks?.classList.contains("is-open");
+  const setMenu = (open) => {
     navLinks?.classList.toggle("is-open", open);
-    menuToggle.setAttribute("aria-expanded", String(open));
-    menuToggle.setAttribute("aria-label", open ? "Close navigation menu" : "Open navigation menu");
-  });
-
-  links.forEach((link) => {
-    link.addEventListener("click", (event) => {
-      const id = link.getAttribute("href");
-      const target = id ? document.querySelector(id) : null;
-      if (!target) return;
-      event.preventDefault();
-      target.scrollIntoView({ behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth", block: "start" });
-      history.replaceState(null, "", id);
-      closeMenu();
-    });
-  });
-
-  document.addEventListener("keydown", (event) => {
-    if (event.key === "Escape") closeMenu();
-  });
-
-  document.addEventListener("click", (event) => {
-    if (!navLinks?.classList.contains("is-open")) return;
-    if (!navLinks.contains(event.target) && !menuToggle?.contains(event.target)) closeMenu();
-  });
-
-  const updateScrollState = () => {
-    const max = document.documentElement.scrollHeight - window.innerHeight;
-    const ratio = max > 0 ? Math.min(1, Math.max(0, window.scrollY / max)) : 0;
-    header?.classList.toggle("is-scrolled", window.scrollY > 20);
-    if (progress) progress.style.transform = `scaleX(${ratio})`;
+    menuToggle?.setAttribute("aria-expanded", String(open));
+    menuToggle?.setAttribute("aria-label", open ? "Close navigation menu" : "Open navigation menu");
   };
+
+  menuToggle?.addEventListener("click", () => setMenu(!navLinks.classList.contains("is-open")));
+  links.forEach((link) => link.addEventListener("click", () => setMenu(false)));
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && navLinks?.classList.contains("is-open")) { setMenu(false); menuToggle?.focus(); }
+  });
+  document.addEventListener("click", (e) => {
+    if (navLinks?.classList.contains("is-open") && !navLinks.contains(e.target) && !menuToggle.contains(e.target)) setMenu(false);
+  });
 
   let ticking = false;
+  const onScroll = () => {
+    const max = document.documentElement.scrollHeight - window.innerHeight;
+    const ratio = max > 0 ? Math.min(1, window.scrollY / max) : 0;
+    header?.classList.toggle("is-scrolled", window.scrollY > 12);
+    if (progress) progress.style.transform = `scaleX(${ratio})`;
+    ticking = false;
+  };
   window.addEventListener("scroll", () => {
-    if (ticking) return;
-    ticking = true;
-    window.requestAnimationFrame(() => {
-      updateScrollState();
-      ticking = false;
-    });
+    if (!ticking) { ticking = true; requestAnimationFrame(onScroll); }
   }, { passive: true });
-  updateScrollState();
+  onScroll();
 
-  if (sections.length && links.length && "IntersectionObserver" in window) {
-    const observer = new IntersectionObserver((entries) => {
+  if ("IntersectionObserver" in window) {
+    const sections = links.map((l) => document.querySelector(l.getAttribute("href"))).filter(Boolean);
+    const spy = new IntersectionObserver((entries) => {
       entries.forEach((entry) => {
         if (!entry.isIntersecting) return;
-        links.forEach((link) => link.classList.toggle("active", link.getAttribute("href") === `#${entry.target.id}`));
+        links.forEach((l) => {
+          const on = l.getAttribute("href") === `#${entry.target.id}`;
+          l.classList.toggle("active", on);
+          if (on) l.setAttribute("aria-current", "true"); else l.removeAttribute("aria-current");
+        });
       });
-    }, { rootMargin: "-35% 0px -55% 0px", threshold: 0 });
-    sections.forEach((section) => observer.observe(section));
+    }, { rootMargin: "-40% 0px -55% 0px" });
+    sections.forEach((s) => spy.observe(s));
   }
 
+  /* ---------- Reveal on scroll ---------- */
+  const reveals = document.querySelectorAll(".reveal");
+  if (reduceMotion || !("IntersectionObserver" in window)) {
+    reveals.forEach((el) => el.classList.add("is-visible"));
+  } else {
+    const io = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (!entry.isIntersecting) return;
+        entry.target.classList.add("is-visible");
+        io.unobserve(entry.target);
+      });
+    }, { rootMargin: "0px 0px -8% 0px", threshold: 0.08 });
+    reveals.forEach((el, i) => {
+      el.style.transitionDelay = `${(i % 4) * 60}ms`;
+      io.observe(el);
+    });
+  }
+
+  /* ---------- Tabs (WAI-ARIA pattern) ---------- */
+  document.querySelectorAll("[data-tabs]").forEach((wrap) => {
+    const tabs = [...wrap.querySelectorAll('[role="tab"]')];
+    const select = (tab, focus) => {
+      tabs.forEach((t) => {
+        const on = t === tab;
+        t.setAttribute("aria-selected", String(on));
+        t.tabIndex = on ? 0 : -1;
+        document.getElementById(t.getAttribute("aria-controls")).hidden = !on;
+      });
+      if (focus) tab.focus();
+    };
+    tabs.forEach((tab, i) => {
+      tab.addEventListener("click", () => select(tab, false));
+      tab.addEventListener("keydown", (e) => {
+        const map = { ArrowRight: i + 1, ArrowDown: i + 1, ArrowLeft: i - 1, ArrowUp: i - 1, Home: 0, End: tabs.length - 1 };
+        if (!(e.key in map)) return;
+        e.preventDefault();
+        select(tabs[(map[e.key] + tabs.length) % tabs.length], true);
+      });
+    });
+  });
+
+  /* ---------- Architecture diagrams ---------- */
+  // Every description below is taken from the resume.
+  const DETAILS = {
+    cdn: ["CDN", "Operated the production CDN, configuring VPN, Linux Netplan networking and point-to-point links between CDN and origin servers."],
+    nginx: ["Nginx HTTP cache", "Second tier of a two-tier cache: Nginx caches HTTP responses to cut repeat load on origin systems."],
+    apigw: ["API Gateway", "Delivered the API layer on API Gateway and Lambda, removing always-on servers from the request path."],
+    lambda: ["AWS Lambda", "Production REST APIs run on Lambda behind API Gateway — no always-on servers in the request path."],
+    svc: ["Node.js microservices", "Architected the platform as independently deployable Node.js microservices, designed for scalability and fault tolerance. Every service deploys and scales independently."],
+    sqs: ["SQS queues", "Decoupled services with SQS queues, with retries and failure handling so that one failing service does not stall the rest."],
+    ws: ["WebSocket channels", "WebSocket channels for real-time communication between services, alongside SQS for asynchronous work."],
+    redis: ["Redis cache", "First tier of a two-tier cache: Redis for application data, cutting repeat load on origin systems."],
+    net: ["VPN · Netplan · origin links", "Configured VPN, Linux Netplan networking and point-to-point links between CDN and origin servers."],
+    ops: ["CI/CD · CloudWatch", "Automated builds and deployments through CI/CD, and added CloudWatch monitoring for operational visibility."],
+
+    ext: ["Internal & third-party systems", "Built Node.js and Express.js microservices that connect internal and third-party systems through REST APIs."],
+    rest: ["REST APIs", "REST APIs are the integration surface between internal services and third-party systems."],
+    auth: ["JWT · role-based authorization", "Secured every API with JWT-based authentication and role-based authorization."],
+    express: ["Node.js / Express.js microservices", "Built Node.js and Express.js microservices for the integration platform."],
+    kafka: ["Kafka event bus", "Introduced Kafka for event-driven communication between services, replacing direct service-to-service dependencies."],
+    pg: ["PostgreSQL", "Designed PostgreSQL persistence and optimized slow queries to improve API performance."],
+    mongo: ["MongoDB", "MongoDB is part of the platform's data layer alongside PostgreSQL."],
+
+    iam: ["IAM · VPC · Security groups", "Locked down AWS environments with IAM, VPC and security groups on least-privilege principles."],
+    deploy: ["EC2 · Lambda · S3 · RDS · API Gateway", "Deployed cloud applications on AWS using EC2, Lambda, S3, RDS and API Gateway, designing for availability, resiliency, performance and cost optimization."],
+    docker: ["Docker", "Containerized backend services with Docker across development and production."],
+    pm2: ["PM2", "Ran backend services under PM2 across development and production."],
+    cicd: ["CI/CD + automated tests", "Implemented CI/CD pipelines with automated testing for builds and deployments."],
+    perf: ["Performance tuning", "Analysed and optimized the performance of backend APIs and database operations."],
+    review: ["Code reviews", "Code reviews are part of how I own quality across both platforms."]
+  };
+
+  document.querySelectorAll(".case").forEach((caseEl) => {
+    const nodes = [...caseEl.querySelectorAll(".node")];
+    const panel = caseEl.querySelector(".node-detail");
+    const title = caseEl.querySelector("[data-detail-title]");
+    const text = caseEl.querySelector("[data-detail-text]");
+    nodes.forEach((node) => {
+      node.addEventListener("click", () => {
+        const d = DETAILS[node.dataset.key];
+        if (!d) return;
+        nodes.forEach((n) => n.setAttribute("aria-pressed", String(n === node)));
+        title.textContent = d[0];
+        text.textContent = d[1];
+        if (!reduceMotion) {
+          panel.classList.remove("is-updating");
+          void panel.offsetWidth; // restart animation
+          panel.classList.add("is-updating");
+        }
+      });
+    });
+  });
+
+  /* ---------- Copy email ---------- */
+  const copyEmail = document.getElementById("copyEmail");
   copyEmail?.addEventListener("click", async () => {
     const email = copyEmail.dataset.email;
     const original = copyEmail.textContent;
     try {
       await navigator.clipboard.writeText(email);
       copyEmail.textContent = "Copied ✓";
-      window.setTimeout(() => { copyEmail.textContent = original; }, 1800);
+      setTimeout(() => { copyEmail.textContent = original; }, 1800);
     } catch {
       window.location.href = `mailto:${email}`;
     }
   });
 
+  const year = document.getElementById("currentYear");
   if (year) year.textContent = String(new Date().getFullYear());
-});
+})();

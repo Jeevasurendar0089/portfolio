@@ -1,30 +1,26 @@
-/* Theme preference with a tiny, dependency-free implementation. */
+/* Theme toggle. Initial theme is applied by an inline script in <head> to avoid a flash. */
 (() => {
   const STORAGE_KEY = "jeeva-portfolio-theme";
-  const body = document.body;
+  const root = document.documentElement;
   const toggle = document.getElementById("themeToggle");
+  const meta = document.querySelector('meta[name="theme-color"]');
+  const systemLight = window.matchMedia("(prefers-color-scheme: light)");
 
-  let saved = null;
-  try { saved = localStorage.getItem(STORAGE_KEY); } catch { /* Storage can be unavailable in restricted contexts. */ }
-  const systemPrefersLight = window.matchMedia("(prefers-color-scheme: light)").matches;
-  const initial = saved === "light" || saved === "dark" ? saved : (systemPrefersLight ? "light" : "dark");
+  const current = () => root.getAttribute("data-theme") || (systemLight.matches ? "light" : "dark");
 
-  function applyTheme(theme) {
-    const light = theme === "light";
-    body.classList.toggle("light-theme", light);
-    document.documentElement.style.colorScheme = light ? "light" : "dark";
-    if (toggle) {
-      toggle.textContent = light ? "🌙" : "☀️";
-      toggle.setAttribute("aria-label", light ? "Switch to dark theme" : "Switch to light theme");
-      toggle.setAttribute("aria-pressed", String(light));
-    }
+  function sync() {
+    const light = current() === "light";
+    toggle?.setAttribute("aria-label", light ? "Switch to dark theme" : "Switch to light theme");
+    meta?.setAttribute("content", light ? "#f7f8fb" : "#0b0d12");
   }
 
-  applyTheme(initial);
-
   toggle?.addEventListener("click", () => {
-    const next = body.classList.contains("light-theme") ? "dark" : "light";
-    applyTheme(next);
-    try { localStorage.setItem(STORAGE_KEY, next); } catch { /* Continue without persistence if storage is unavailable. */ }
+    const next = current() === "light" ? "dark" : "light";
+    root.setAttribute("data-theme", next);
+    try { localStorage.setItem(STORAGE_KEY, next); } catch { /* storage unavailable */ }
+    sync();
   });
+
+  systemLight.addEventListener?.("change", sync);
+  sync();
 })();
