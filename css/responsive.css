@@ -27,6 +27,8 @@
   .snapshot { margin: 0; }
   .snapshot-links { grid-column: 1 / -1; margin-top: 0; }
 
+  .tablist { grid-template-columns: repeat(2, 1fr); }
+
   .ai-grid { grid-template-columns: 1fr; }
   .ai-grid .section-head { position: static; }
 

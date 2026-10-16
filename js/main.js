@@ -96,6 +96,24 @@
   /* ---------- Architecture diagrams ---------- */
   // Every description below is taken from the resume.
   const DETAILS = {
+    bpos: ["Windows POS app · offline + online", "Built the billing system as a Windows laptop application and a web application, with offline and online support so billing keeps running when the internet drops."],
+    bqr: ["QR table ordering", "Customers scan a QR code to place their orders themselves."],
+    bvendor: ["Online order vendors", "Integrated online-order APIs from local vendors so external orders arrive in the same billing and kitchen flow."],
+    bapi: ["Node.js / Express APIs", "Node.js and Express.js APIs for bill orders, food management and KOT handling."],
+    bws: ["WebSockets · live kitchen status", "KOT management with real-time kitchen status pushed over WebSockets."],
+    bgst: ["GST invoices", "Generates GST invoices for customer bills."],
+    bpayu: ["PayU payments", "Integrated PayU for online payment handling."],
+    bdash: ["Revenue dashboard · reports", "A high-level revenue dashboard and global report management for the owners."],
+    broles: ["Franchises · master roles", "Franchise support with master-level role management across outlets."],
+    bdata: ["PostgreSQL · Redis · Nginx cache", "PostgreSQL for persistent data, with Redis and Nginx caching for speed."],
+    bdeploy: ["DigitalOcean · Linux · Nginx", "Deployed on DigitalOcean Linux servers behind Nginx."],
+
+    hportal: ["Management portal", "Designed and built the centralized Hospitality Infotainment Management Portal hotels use to manage in-room TV content and services for every room."],
+    hsvc: ["Node.js services & APIs", "Built the backend services and APIs behind content, guest-service and device workflows for HEPI TV Hospitality."],
+    hsdk: ["Dynamic SDK reflection", "Developed dynamic SDK reflection capabilities for HEPI TV applications."],
+    hlaunch: ["Android TV / STB launcher", "Built the HEPI TV Web Application Launcher for Android TV and AOSP-based set-top boxes."],
+    htep: ["Samsung TEP Hospitality Mode", "Integrated HEPI TV with Samsung TEP Hospitality Mode launchers so the product runs natively on Samsung hotel TVs."],
+
     cdn: ["CDN", "Operated the production CDN, configuring VPN, Linux Netplan networking and point-to-point links between CDN and origin servers."],
     nginx: ["Nginx HTTP cache", "Second tier of a two-tier cache: Nginx caches HTTP responses to cut repeat load on origin systems."],
     apigw: ["API Gateway", "Delivered the API layer on API Gateway and Lambda, removing always-on servers from the request path."],
@@ -106,6 +124,13 @@
     redis: ["Redis cache", "First tier of a two-tier cache: Redis for application data, cutting repeat load on origin systems."],
     net: ["VPN · Netplan · origin links", "Configured VPN, Linux Netplan networking and point-to-point links between CDN and origin servers."],
     ops: ["CI/CD · CloudWatch", "Automated builds and deployments through CI/CD, and added CloudWatch monitoring for operational visibility."],
+
+    pflows: ["Recharges · STB orders · food orders", "Payment flows across HEPI TV and IPTV: TV recharges, buying new set-top boxes, in-room food orders paid directly by guests, and operator and customer self-recharge of subscriptions and individual channels."],
+    porder: ["Order & billing APIs", "Node.js order and billing APIs behind recharges, STB purchases, food orders and e-commerce order handling."],
+    przp: ["Razorpay", "Integrated Razorpay using the Razorpay Node.js SDK and REST APIs for payment handling."],
+    ppayu: ["PayU", "Integrated PayU payment handling for billing software."],
+    pwh: ["Webhook management", "Managed payment gateway webhooks to keep order and payment status in sync."],
+    pqueue: ["Queues · failed-transaction handling", "Handled error and failed transactions, using queue management for reliable payment processing."],
 
     ext: ["Internal & third-party systems", "Built Node.js and Express.js microservices that connect internal and third-party systems through REST APIs."],
     rest: ["REST APIs", "REST APIs are the integration surface between internal services and third-party systems."],
@@ -120,8 +145,10 @@
     docker: ["Docker", "Containerized backend services with Docker across development and production."],
     pm2: ["PM2", "Ran backend services under PM2 across development and production."],
     cicd: ["CI/CD + automated tests", "Implemented CI/CD pipelines with automated testing for builds and deployments."],
+    playwright: ["Playwright tests", "Automated end-to-end testing with Playwright, run as part of the CI/CD pipeline."],
+    monitor: ["Prometheus · Grafana", "Monitored production services with Prometheus metrics and Grafana dashboards."],
     perf: ["Performance tuning", "Analysed and optimized the performance of backend APIs and database operations."],
-    review: ["Code reviews", "Code reviews are part of how I own quality across both platforms."]
+    review: ["Code reviews", "Code reviews are part of how I own quality across all platforms."]
   };
 
   document.querySelectorAll(".case").forEach((caseEl) => {

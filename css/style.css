@@ -391,6 +391,8 @@ svg.fill { fill: currentColor; stroke: none; }
 .tl-card-muted h3 { font-size: 1.1rem; }
 .tl-head h3 { font-size: 1.35rem; }
 .tl-company { color: var(--accent); font-weight: 500; margin-top: 4px; }
+.tl-aka { color: var(--muted); font-weight: 500; font-size: .85em; }
+.tl-path { margin-top: 8px; font-family: var(--mono); font-size: .82rem; color: var(--muted); }
 .tl-summary { margin: 14px 0 18px; color: var(--text-2); }
 .tl-track { border-top: 1px solid var(--border); }
 .tl-track summary {
